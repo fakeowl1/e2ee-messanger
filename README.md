@@ -18,6 +18,7 @@
     <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
   <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
 </p>
+
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
@@ -25,26 +26,28 @@
 
 Simple end-to-end encryption messanger in Nest.js
 
+## Tech stack
+
+- Nest.js (backend)
+- Docker (container)
+
+## How it should work
+
+First, when a user signs in or registers an account for the first time, the application generates a pair of cryptographic keys on the user's device: a private key and a public key.
+
+The public key is sent to the server and stored in a database, while the private key—encrypted using a secure passphrase—stays on the user's device. For example, when Alice sends a message to Bob, the application encrypts the message using Bob's public key. Once Bob receives the encrypted message, the application uses Bob's private key to decrypt it.
+
+![usecases](./img/end-to-end-encrypted-messanger.png)
+
 ## Project setup
 
-```bash
-$ npm install
+1. Use .env.dist file example for creating .env
+2. Start the app in docker
+```
+docker compose up -d
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+## Tests
 
 ```bash
 # unit tests

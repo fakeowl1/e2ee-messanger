@@ -1,0 +1,23 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+actor "Alice" as A
+participant "Server Nest.js" as S
+actor "Bob" as B
+
+== Action 1: Key Registration ==
+B -> B: Generates Key Pair\nand Encrypts Private Key Locally
+B -> S: Sends Public Key
+S -> S: Stores Bob's Public Key
+
+== Action 2: Sending a Message ==
+A -> S: Requests Bob's Public Key
+S --> A: Returns Bob's Public Key
+
+A -> A: Encrypts message using\nBob's Public Key
+A -> S: Sends Encrypted Message
+S -> B: Forwards ciphertext
+
+B -> B: Decrypts Private Key with passphrase\nand Decrypts Message
+@endum
