@@ -37,7 +37,7 @@ First, when a user signs in or registers an account for the first time, the appl
 
 The public key is sent to the server and stored in a database, while the private key—encrypted using a secure passphrase—stays on the user's device. For example, when Alice sends a message to Bob, the application encrypts the message using Bob's public key. Once Bob receives the encrypted message, the application uses Bob's private key to decrypt it.
 
-![usecases](./img/end-to-end-encrypted-messanger.png)
+![usecases](./img/end-to-end-encryption-diagram.png)
 
 ## Project setup
 
