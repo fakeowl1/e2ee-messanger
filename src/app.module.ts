@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ChatController } from './chat/chat.controller';
 import { UserController } from './user/user.controller';
-import { UsersService } from './user/user.service';
+import { UserService } from './user/user.service';
 import { DatabaseModule } from './database/database.module';
 import { UserRepository } from './user/user.repository';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [DatabaseModule],
-  controllers: [AppController, ChatController, UserController],
-  providers: [AppService, UsersService, UserRepository],
+  imports: [DatabaseModule, AuthModule, UserModule],
+  controllers: [AppController, UserController],
+  providers: [AppService, UserService, UserRepository],
 })
 export class AppModule { }
