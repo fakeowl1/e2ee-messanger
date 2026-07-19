@@ -12,7 +12,7 @@ export type NewUser = typeof schema.users.$inferInsert;
 export class UserRepository {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof relations>,
-  ) { }
+  ) {}
   async findAll(): Promise<User[]> {
     return this.db.select().from(schema.users);
   }

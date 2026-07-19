@@ -12,7 +12,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
   async register(
     firstName: string,
     userName: string,

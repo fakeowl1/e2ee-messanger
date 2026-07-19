@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class PostgresClientProvider implements OnApplicationShutdown {
   private readonly logger = new Logger(PostgresClientProvider.name);
 
-  constructor(public readonly client: postgres.Sql) { }
+  constructor(public readonly client: postgres.Sql) {}
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`Closing database connection (signal: ${signal})`);
     await this.client.end();

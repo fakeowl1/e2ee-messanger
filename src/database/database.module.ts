@@ -12,4 +12,4 @@ import appConfig from '../config/app.config';
   providers: [PostgresProvider, DrizzleProvider],
   exports: [DRIZZLE],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}
