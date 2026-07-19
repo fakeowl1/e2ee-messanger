@@ -4,9 +4,11 @@ import { DrizzleProvider } from './providers/drizzle.provider';
 import { PostgresProvider } from './providers/postgres.provider';
 import { ConfigModule } from '@nestjs/config';
 
+import appConfig from '../config/app.config';
+
 @Global()
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  imports: [ConfigModule.forRoot({ load: [appConfig] })],
   providers: [PostgresProvider, DrizzleProvider],
   exports: [DRIZZLE],
 })
