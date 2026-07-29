@@ -1,10 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { NewUser } from 'src/user/user.repository';
+import { NewUser, User } from 'src/user/user.repository';
 
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { UserLoginDto } from './dto/login.dto';
+import { RegisterUserDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,12 +16,12 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async register(
-    firstName: string,
-    userName: string,
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string }> {
+  async register({
+    firstName,
+    userName,
+    email,
+    password,
+  }: RegisterUserDto): Promise<{ access_token: string }> {
     await this.userService.userNameIsAvailable(userName);
     await this.userService.emailIsAvailable(email);
 
@@ -43,22 +45,19 @@ export class AuthService {
     };
   }
 
-  async signIn(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string }> {
+  async validateUser({ email, password }: UserLoginDto) {
     const user = await this.userService.findByEmail(email);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid email');
-    }
+    if (!user) return null;
 
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
+    if (!isPasswordValid) return null;
 
-    const payload = { sub: user.id, username: user.userName };
+    return user;
+  }
+
+  login(user: User): { access_token: string } {
+    const payload = { email: user.email, sub: user.id };
 
     const jwtOptions = this.configService.get<JwtSignOptions>('jwt');
 
