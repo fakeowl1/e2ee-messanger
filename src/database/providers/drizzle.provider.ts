@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { DRIZZLE, POSTGRES_CLIENT } from '../database.constants';
 import { PostgresClientProvider } from './postgres.provider';
 
-import * as schema from '../schema';
+import { relations } from '../relations';
 
 interface AppConfig {
   nodeEnv: string;
@@ -25,7 +25,7 @@ export const DrizzleProvider = {
 
     return drizzle({
       client: postgresProvider.client,
-      schema,
+      relations,
       logger: isDevelopment,
     });
   },
