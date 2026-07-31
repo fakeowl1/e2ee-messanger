@@ -1,10 +1,10 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
+import { User } from 'src/user/user.repository';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn(),
@@ -76,20 +76,20 @@ describe('AuthService', () => {
       const salt = 'salt-value';
       const hashedPassword = 'hashed-password';
       const jwtOptions = { secret: 'jwt-secret', expiresIn: '15m' };
-      const payload = { sub: 7, username: 'alice' };
+      const createdUserPayload = { id: 7, email: 'alice@mail.com' };
 
       genSaltMock.mockResolvedValue(salt as never);
       hashMock.mockResolvedValue(hashedPassword as never);
-      createUserMock.mockResolvedValue(payload);
+      createUserMock.mockResolvedValue(createdUserPayload);
       configGetMock.mockReturnValue(jwtOptions);
       jwtSignMock.mockReturnValue('signed-token');
 
-      const result = await service.register(
-        'Alice',
-        'alice',
-        'alice@mail.com',
-        'password123',
-      );
+      const result = await service.register({
+        firstName: 'Alice',
+        userName: 'alice',
+        email: 'alice@mail.com',
+        password: 'password123',
+      });
 
       expect(userNameIsAvailableMock).toHaveBeenCalledWith('alice');
       expect(emailIsAvailableMock).toHaveBeenCalledWith('alice@mail.com');
@@ -103,18 +103,22 @@ describe('AuthService', () => {
         hashedSalt: salt,
       });
       expect(configGetMock).toHaveBeenCalledWith('jwt');
-      expect(jwtSignMock).toHaveBeenCalledWith(payload, jwtOptions);
+      expect(jwtSignMock).toHaveBeenCalledWith(createdUserPayload, jwtOptions);
       expect(result).toEqual({ access_token: 'signed-token' });
     });
 
     it('should throw if username already exists', async () => {
-      userNameIsAvailableMock.mockRejectedValue(
-        new BadRequestException('Username is occupied'),
-      );
+      const error = new Error('Username is occupied');
+      userNameIsAvailableMock.mockRejectedValue(error);
 
       await expect(
-        service.register('Alice', 'alice', 'alice@mail.com', 'password123'),
-      ).rejects.toThrow(new BadRequestException('Username is occupied'));
+        service.register({
+          firstName: 'Alice',
+          userName: 'alice',
+          email: 'alice@mail.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(error);
 
       expect(userNameIsAvailableMock).toHaveBeenCalledWith('alice');
       expect(emailIsAvailableMock).not.toHaveBeenCalled();
@@ -125,13 +129,17 @@ describe('AuthService', () => {
     });
 
     it('should throw if email already exists', async () => {
-      emailIsAvailableMock.mockRejectedValue(
-        new BadRequestException('Email is occupied'),
-      );
+      const error = new Error('Email is occupied');
+      emailIsAvailableMock.mockRejectedValue(error);
 
       await expect(
-        service.register('Alice', 'alice', 'alice@mail.com', 'password123'),
-      ).rejects.toThrow(new BadRequestException('Email is occupied'));
+        service.register({
+          firstName: 'Alice',
+          userName: 'alice',
+          email: 'alice@mail.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(error);
 
       expect(userNameIsAvailableMock).toHaveBeenCalledWith('alice');
       expect(emailIsAvailableMock).toHaveBeenCalledWith('alice@mail.com');
@@ -142,47 +150,84 @@ describe('AuthService', () => {
     });
   });
 
-  describe('signIn', () => {
-    it('should throw UnauthorizedException if email does not exist', async () => {
+  describe('validateUser', () => {
+    it('should return null if email does not exist', async () => {
       findByEmailMock.mockResolvedValue(null);
 
-      await expect(
-        service.signIn('alice@mail.com', 'password123'),
-      ).rejects.toThrow(new UnauthorizedException('Invalid email'));
+      const result = await service.validateUser({
+        email: 'alice@mail.com',
+        password: 'password123',
+      });
+
       expect(findByEmailMock).toHaveBeenCalledWith('alice@mail.com');
+      expect(result).toBeNull();
     });
 
-    it('should throw UnauthorizedException if password is invalid', async () => {
-      findByEmailMock.mockResolvedValue({
+    it('should return null if password is invalid', async () => {
+      const user = {
         id: 7,
+        firstName: 'Alice',
         userName: 'alice',
+        email: 'alice@mail.com',
         hashedPassword: 'stored-hash',
-      });
+        hashedSalt: 'stored-salt',
+      };
+
+      findByEmailMock.mockResolvedValue(user);
       compareMock.mockResolvedValue(false as never);
 
-      await expect(
-        service.signIn('alice@mail.com', 'wrong-password'),
-      ).rejects.toThrow(new UnauthorizedException('Invalid email or password'));
+      const result = await service.validateUser({
+        email: 'alice@mail.com',
+        password: 'wrong-password',
+      });
+
       expect(compareMock).toHaveBeenCalledWith('wrong-password', 'stored-hash');
+      expect(result).toBeNull();
     });
 
-    it('should return access token if credentials are valid', async () => {
-      const jwtOptions = { secret: 'jwt-secret', expiresIn: '15m' };
-
-      findByEmailMock.mockResolvedValue({
+    it('should return user if credentials are valid', async () => {
+      const user = {
         id: 7,
+        firstName: 'Alice',
         userName: 'alice',
+        email: 'alice@mail.com',
         hashedPassword: 'stored-hash',
-      });
+        hashedSalt: 'stored-salt',
+      };
+
+      findByEmailMock.mockResolvedValue(user);
       compareMock.mockResolvedValue(true as never);
+
+      const result = await service.validateUser({
+        email: 'alice@mail.com',
+        password: 'password123',
+      });
+
+      expect(compareMock).toHaveBeenCalledWith('password123', 'stored-hash');
+      expect(result).toEqual(user);
+    });
+  });
+
+  describe('login', () => {
+    it('should return access token for valid user', () => {
+      const jwtOptions = { secret: 'jwt-secret', expiresIn: '15m' };
+      const user: User = {
+        id: 7,
+        firstName: 'Alice',
+        userName: 'alice',
+        email: 'alice@mail.com',
+        hashedPassword: 'stored-hash',
+        hashedSalt: 'stored-salt',
+      };
+
       configGetMock.mockReturnValue(jwtOptions);
       jwtSignMock.mockReturnValue('signed-token');
 
-      const result = await service.signIn('alice@mail.com', 'password123');
+      const result = service.login(user);
 
       expect(configGetMock).toHaveBeenCalledWith('jwt');
       expect(jwtSignMock).toHaveBeenCalledWith(
-        { sub: 7, username: 'alice' },
+        { email: 'alice@mail.com', sub: 7 },
         jwtOptions,
       );
       expect(result).toEqual({ access_token: 'signed-token' });

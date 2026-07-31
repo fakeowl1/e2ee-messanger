@@ -1,15 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { User } from 'src/user/user.repository';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let signInMock: jest.Mock;
+  let loginMock: jest.Mock;
   let registerMock: jest.Mock;
 
   beforeEach(async () => {
-    signInMock = jest.fn();
+    loginMock = jest.fn();
     registerMock = jest.fn();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -18,7 +19,7 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: {
-            signIn: signInMock,
+            login: loginMock,
             register: registerMock,
           },
         },
@@ -32,22 +33,27 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('signIn', () => {
-    it('should call authService.signIn with dto values', async () => {
-      signInMock.mockResolvedValue({ access_token: 'signed-token' });
-
-      const result = await controller.signIn({
+  describe('login', () => {
+    it('should call authService.login with request user', () => {
+      const user: User = {
+        id: 7,
+        firstName: 'Alice',
+        userName: 'alice',
         email: 'alice@mail.com',
-        password: 'password123',
-      });
+        hashedPassword: 'stored-hash',
+        hashedSalt: 'stored-salt',
+      };
+      loginMock.mockReturnValue({ access_token: 'signed-token' });
 
-      expect(signInMock).toHaveBeenCalledWith('alice@mail.com', 'password123');
+      const result = controller.login({ user });
+
+      expect(loginMock).toHaveBeenCalledWith(user);
       expect(result).toEqual({ access_token: 'signed-token' });
     });
   });
 
   describe('register', () => {
-    it('should call authService.register with dto values', async () => {
+    it('should call authService.register with dto', async () => {
       registerMock.mockResolvedValue({ access_token: 'signed-token' });
 
       const result = await controller.register({
@@ -57,35 +63,31 @@ describe('AuthController', () => {
         password: 'password123',
       });
 
-      expect(registerMock).toHaveBeenCalledWith(
-        'Alice',
-        'alice',
-        'alice@mail.com',
-        'password123',
-      );
+      expect(registerMock).toHaveBeenCalledWith({
+        firstName: 'Alice',
+        userName: 'alice',
+        email: 'alice@mail.com',
+        password: 'password123',
+      });
       expect(result).toEqual({ access_token: 'signed-token' });
     });
+  });
 
-    it('should throw when user already exists', async () => {
-      registerMock.mockRejectedValue(
-        new BadRequestException('Username is occupied'),
-      );
+  describe('status', () => {
+    it('should return authenticated user from request', () => {
+      const user: User = {
+        id: 7,
+        firstName: 'Alice',
+        userName: 'alice',
+        email: 'alice@mail.com',
+        hashedPassword: 'stored-hash',
+        hashedSalt: 'stored-salt',
+      };
+      const req = { user } as Request;
 
-      await expect(
-        controller.register({
-          firstName: 'Alice',
-          userName: 'alice',
-          email: 'alice@mail.com',
-          password: 'password123',
-        }),
-      ).rejects.toThrow(new BadRequestException('Username is occupied'));
+      const result = controller.status(req);
 
-      expect(registerMock).toHaveBeenCalledWith(
-        'Alice',
-        'alice',
-        'alice@mail.com',
-        'password123',
-      );
+      expect(result).toEqual(user);
     });
   });
 });
