@@ -24,7 +24,7 @@
 
 ## Description
 
-Simple end-to-end encryption messanger in Nest.js
+Simple end-to-end encrypted messanger in Nest.js
 
 ## Tech stack
 
@@ -61,3 +61,7 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+## Todo
+
+- [ ] Implement double ratchet (some day)
