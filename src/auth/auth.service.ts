@@ -56,7 +56,7 @@ export class AuthService {
     return user;
   }
 
-  login(user: User): { access_token: string } {
+  login(user: { email: string; id: string }): { access_token: string } {
     const payload = { email: user.email, sub: user.id };
 
     const jwtOptions = this.configService.get<JwtSignOptions>('jwt');

@@ -1,14 +1,9 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register.dto';
 import { LocalGuard } from './guards/local.guards';
 import { JwtAuthGuard } from './guards/jwt.guards';
-import { User } from 'src/user/user.repository';
-
-type RequestWithUser = {
-  user: User;
-};
+import type { requestWithUser } from './auth.type';
 
 @Controller('auth')
 export class AuthController {
@@ -16,8 +11,10 @@ export class AuthController {
 
   @UseGuards(LocalGuard)
   @Post('login')
-  login(@Req() reqWithUser: RequestWithUser) {
-    return this.authService.login(reqWithUser.user);
+  login(@Req() req: requestWithUser) {
+    const user = req.user;
+
+    return this.authService.login(user);
   }
 
   @Post('register')
@@ -27,7 +24,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('status')
-  status(@Req() req: Request) {
+  status(@Req() req: requestWithUser) {
     return req.user;
   }
 }
