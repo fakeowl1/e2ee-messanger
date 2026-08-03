@@ -5,7 +5,7 @@ export const users = table('users', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
   firstName: t.varchar('first_name', { length: 256 }).notNull(),
   userName: t.varchar('username', { length: 256 }).notNull().unique(),
-  email: t.varchar().unique(),
+  email: t.varchar().notNull().unique(),
   hashedPassword: t.varchar('hashed_password').notNull(),
   hashedSalt: t.varchar('hashed_salt').notNull(),
 });
