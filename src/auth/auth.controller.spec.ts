@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Request } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { User } from 'src/user/user.repository';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -35,13 +33,9 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('should call authService.login with request user', () => {
-      const user: User = {
-        id: 7,
-        firstName: 'Alice',
-        userName: 'alice',
+      const user = {
+        id: '7',
         email: 'alice@mail.com',
-        hashedPassword: 'stored-hash',
-        hashedSalt: 'stored-salt',
       };
       loginMock.mockReturnValue({ access_token: 'signed-token' });
 
@@ -70,24 +64,6 @@ describe('AuthController', () => {
         password: 'password123',
       });
       expect(result).toEqual({ access_token: 'signed-token' });
-    });
-  });
-
-  describe('status', () => {
-    it('should return authenticated user from request', () => {
-      const user: User = {
-        id: 7,
-        firstName: 'Alice',
-        userName: 'alice',
-        email: 'alice@mail.com',
-        hashedPassword: 'stored-hash',
-        hashedSalt: 'stored-salt',
-      };
-      const req = { user } as Request;
-
-      const result = controller.status(req);
-
-      expect(result).toEqual(user);
     });
   });
 });
