@@ -1,18 +1,21 @@
-export class UserDetailsDto {
+import { Exclude, Expose } from 'class-transformer';
+
+export class UserResponseDto {
+  @Expose()
   id: number;
+
+  @Expose()
   email: string;
+
+  @Expose()
   userName: string;
+
+  @Expose()
   firstName: string;
 
-  constructor(user: {
-    id: number;
-    email: string;
-    userName: string;
-    firstName: string;
-  }) {
-    this.id = user.id;
-    this.email = user.email;
-    this.userName = user.userName;
-    this.firstName = user.firstName;
-  }
+  @Exclude()
+  hashedPassword: string;
+
+  @Exclude()
+  hashedSalt: string;
 }
