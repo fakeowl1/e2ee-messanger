@@ -211,7 +211,10 @@ describe('AuthService', () => {
 
       const result = service.login(user);
 
-      expect(jwtSignMock).toHaveBeenCalledWith({ email: 'alice@mail.com', sub: 7 });
+      expect(jwtSignMock).toHaveBeenCalledWith({
+        email: 'alice@mail.com',
+        sub: 7,
+      });
       expect(result).toEqual({ access_token: 'signed-token' });
     });
   });
