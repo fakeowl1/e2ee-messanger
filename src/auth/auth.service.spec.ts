@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
@@ -19,7 +18,6 @@ describe('AuthService', () => {
   let createUserMock: jest.Mock;
   let findByEmailMock: jest.Mock;
   let jwtSignMock: jest.Mock;
-  let configGetMock: jest.Mock;
   let genSaltMock: jest.MockedFunction<typeof bcrypt.genSalt>;
   let hashMock: jest.MockedFunction<typeof bcrypt.hash>;
   let compareMock: jest.MockedFunction<typeof bcrypt.compare>;
@@ -32,7 +30,6 @@ describe('AuthService', () => {
     createUserMock = jest.fn();
     findByEmailMock = jest.fn();
     jwtSignMock = jest.fn();
-    configGetMock = jest.fn();
     genSaltMock = jest.mocked(bcrypt.genSalt);
     hashMock = jest.mocked(bcrypt.hash);
     compareMock = jest.mocked(bcrypt.compare);
@@ -55,12 +52,6 @@ describe('AuthService', () => {
             sign: jwtSignMock,
           },
         },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: configGetMock,
-          },
-        },
       ],
     }).compile();
 
@@ -75,13 +66,11 @@ describe('AuthService', () => {
     it('should create a user and return access token', async () => {
       const salt = 'salt-value';
       const hashedPassword = 'hashed-password';
-      const jwtOptions = { secret: 'jwt-secret', expiresIn: '15m' };
       const createdUserPayload = { id: 7, email: 'alice@mail.com' };
 
       genSaltMock.mockResolvedValue(salt as never);
       hashMock.mockResolvedValue(hashedPassword as never);
       createUserMock.mockResolvedValue(createdUserPayload);
-      configGetMock.mockReturnValue(jwtOptions);
       jwtSignMock.mockReturnValue('signed-token');
 
       const result = await service.register({
@@ -102,8 +91,7 @@ describe('AuthService', () => {
         hashedPassword,
         hashedSalt: salt,
       });
-      expect(configGetMock).toHaveBeenCalledWith('jwt');
-      expect(jwtSignMock).toHaveBeenCalledWith(createdUserPayload, jwtOptions);
+      expect(jwtSignMock).toHaveBeenCalledWith(createdUserPayload);
       expect(result).toEqual({ access_token: 'signed-token' });
     });
 
@@ -210,7 +198,6 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return access token for valid user', () => {
-      const jwtOptions = { secret: 'jwt-secret', expiresIn: '15m' };
       const user: User = {
         id: 7,
         firstName: 'Alice',
@@ -220,16 +207,11 @@ describe('AuthService', () => {
         hashedSalt: 'stored-salt',
       };
 
-      configGetMock.mockReturnValue(jwtOptions);
       jwtSignMock.mockReturnValue('signed-token');
 
       const result = service.login(user);
 
-      expect(configGetMock).toHaveBeenCalledWith('jwt');
-      expect(jwtSignMock).toHaveBeenCalledWith(
-        { email: 'alice@mail.com', sub: 7 },
-        jwtOptions,
-      );
+      expect(jwtSignMock).toHaveBeenCalledWith({ email: 'alice@mail.com', sub: 7 });
       expect(result).toEqual({ access_token: 'signed-token' });
     });
   });
