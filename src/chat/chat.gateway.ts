@@ -10,7 +10,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { JwtPayload, WsAuthGuard } from 'src/auth/guards/websocket.guard';
+import { JwtPayload, WsAuthGuard } from 'src/auth/guards/websocket.guards';
 import { CreateNewSessionDto } from './dto/session.dto';
 import { SessionService } from './session.service';
 import { UserService } from 'src/user/user.service';
