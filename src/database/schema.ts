@@ -18,13 +18,14 @@ export const message = table('users_message', {
   createdAt: t.timestamp('created_at').notNull().defaultNow(),
 });
 
-export const publicKeys = table('users_public_keys', {
+export const userPublicKeys = table('user_public_keys', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+  userId: t.integer('user_id').references(() => users.id),
   publicKey: t.varchar().notNull(),
 });
 
 export const sessions = table('users_sessions', {
   id: t.integer().generatedAlwaysAsIdentity(),
-  publicKeyId: t.integer('public_key_id').references(() => publicKeys.id),
-  expireDate: t.date('expire_date').notNull(),
+  userKeyId: t.integer('users_public_keys').references(() => userPublicKeys.id),
+  expireDate: t.date('expire_date', { mode: 'date' }).notNull(),
 });
