@@ -1,8 +1,16 @@
 import type { Request } from 'express';
 
-export type requestWithUser = Request & {
+export type RequestWithJwtUser = Request & {
   user: {
-    id: string;
+    sub: number;
     email: string;
+  };
+};
+
+export type RequestWithLocalUser = Request & {
+  user: {
+    id: number;
+    email: string;
+    userName: string;
   };
 };

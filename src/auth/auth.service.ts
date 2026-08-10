@@ -53,7 +53,7 @@ export class AuthService {
     return user;
   }
 
-  login(user: { email: string; id: string }): { access_token: string } {
+  login(user: { email: string; id: number }): { access_token: string } {
     const payload = { email: user.email, sub: user.id };
 
     return {

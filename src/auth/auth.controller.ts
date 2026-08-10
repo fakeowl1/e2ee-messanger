@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register.dto';
 import { LocalGuard } from './guards/local.guards';
-import type { requestWithUser } from './auth.type';
+import type { RequestWithLocalUser } from './auth.type';
 
 @Controller('auth')
 export class AuthController {
@@ -10,7 +10,7 @@ export class AuthController {
 
   @UseGuards(LocalGuard)
   @Post('login')
-  login(@Req() req: requestWithUser) {
+  login(@Req() req: RequestWithLocalUser) {
     const user = req.user;
 
     return this.authService.login(user);
