@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
 import { DatabaseModule } from './database/database.module';
-import { UserRepository } from './user/user.repository';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ChatModule } from './chat/chat.module';
@@ -37,7 +36,7 @@ import type { StringValue } from 'ms';
     ChatModule,
   ],
   controllers: [AppController, UserController],
-  providers: [AppService, UserService, UserRepository],
+  providers: [AppService],
   exports: [JwtModule],
 })
 export class AppModule {}
