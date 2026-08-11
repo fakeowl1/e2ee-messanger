@@ -14,7 +14,6 @@ import { JwtPayload, WsAuthGuard } from 'src/auth/guards/websocket.guards';
 import { CreateNewSessionDto } from './dto/session.dto';
 import { SessionService } from './session.service';
 import { UserService } from 'src/user/user.service';
-import { NewMessageDto } from './dto/message.dto';
 
 interface ClientData {
   user: JwtPayload;
