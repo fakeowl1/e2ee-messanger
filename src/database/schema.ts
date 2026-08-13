@@ -20,8 +20,17 @@ export const message = table('users_message', {
     .integer('receiver_id')
     .references(() => users.id)
     .notNull(),
-  encryptedText: t.varchar('encrypted_message', { length: 1024 }).notNull(),
+  chatId: t
+    .integer('chat_id')
+    .references(() => chats.id)
+    .notNull(),
+  encryptedText: t.text('encrypted_message').notNull(),
   timestamp: t.timestamp('timestamp').notNull(),
+});
+
+export const chats = table('users_chats', {
+  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+  createdAt: t.date('created_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
 export const userPublicKeys = table('user_public_keys', {
@@ -30,11 +39,11 @@ export const userPublicKeys = table('user_public_keys', {
     .integer('user_id')
     .references(() => users.id)
     .notNull(),
-  publicKey: t.varchar().notNull(),
+  publicKey: t.text('user_public_key').notNull(),
 });
 
 export const sessions = table('users_sessions', {
-  id: t.integer().generatedAlwaysAsIdentity(),
+  id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
   userKeyId: t
     .integer('users_public_keys')
     .references(() => userPublicKeys.id)
