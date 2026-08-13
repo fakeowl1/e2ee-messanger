@@ -12,20 +12,32 @@ export const users = table('users', {
 
 export const message = table('users_message', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  senderId: t.integer('sender_id').references(() => users.id),
-  recieverId: t.integer('reciever_id').references(() => users.id),
+  senderId: t
+    .integer('sender_id')
+    .references(() => users.id)
+    .notNull(),
+  receiverId: t
+    .integer('receiver_id')
+    .references(() => users.id)
+    .notNull(),
   encryptedText: t.varchar('encrypted_message', { length: 1024 }).notNull(),
   timestamp: t.timestamp('timestamp').notNull(),
 });
 
 export const userPublicKeys = table('user_public_keys', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  userId: t.integer('user_id').references(() => users.id),
+  userId: t
+    .integer('user_id')
+    .references(() => users.id)
+    .notNull(),
   publicKey: t.varchar().notNull(),
 });
 
 export const sessions = table('users_sessions', {
   id: t.integer().generatedAlwaysAsIdentity(),
-  userKeyId: t.integer('users_public_keys').references(() => userPublicKeys.id),
+  userKeyId: t
+    .integer('users_public_keys')
+    .references(() => userPublicKeys.id)
+    .notNull(),
   expireDate: t.date('expire_date', { mode: 'date' }).notNull(),
 });
