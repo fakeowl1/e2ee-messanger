@@ -1,9 +1,15 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class NewMessageDto {
+export class CreateMessageDto {
   @IsNotEmpty()
-  recieverUserID: number;
+  sessionID: number;
+
+  @IsNotEmpty()
+  receiverUserID: number;
 
   @IsNotEmpty()
   encryptedMessageText: string;
+
+  @IsNotEmpty()
+  timestamp: Date;
 }
