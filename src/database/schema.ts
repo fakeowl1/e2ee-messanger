@@ -15,7 +15,7 @@ export const message = table('users_message', {
   senderId: t.integer('sender_id').references(() => users.id),
   recieverId: t.integer('reciever_id').references(() => users.id),
   encryptedText: t.varchar('encrypted_message', { length: 1024 }).notNull(),
-  createdAt: t.timestamp('created_at').notNull().defaultNow(),
+  timestamp: t.timestamp('timestamp').notNull(),
 });
 
 export const userPublicKeys = table('user_public_keys', {
