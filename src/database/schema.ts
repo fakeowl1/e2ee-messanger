@@ -1,6 +1,12 @@
 import { pgTable as table } from 'drizzle-orm/pg-core';
 import * as t from 'drizzle-orm/pg-core';
 
+export const sessionStatusEnum = t.pgEnum('session_status', [
+  'active',
+  'expired',
+  'revoked',
+]);
+
 export const users = table('users', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
   firstName: t.varchar('first_name', { length: 256 }).notNull(),
@@ -30,7 +36,7 @@ export const message = table('users_message', {
 
 export const chats = table('users_chats', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-  createdAt: t.date('created_at', { mode: 'date' }).notNull().defaultNow(),
+  createdAt: t.timestamp('created_at').notNull().defaultNow(),
 });
 
 export const userPublicKeys = table('user_public_keys', {
@@ -44,9 +50,14 @@ export const userPublicKeys = table('user_public_keys', {
 
 export const sessions = table('users_sessions', {
   id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+  ownerUserId: t
+    .integer('owner_user_id')
+    .references(() => users.id)
+    .notNull(),
   userKeyId: t
-    .integer('users_public_keys')
+    .integer('user_key_id')
     .references(() => userPublicKeys.id)
     .notNull(),
-  expireDate: t.date('expire_date', { mode: 'date' }).notNull(),
+  status: sessionStatusEnum('status').notNull().default('active'),
+  expireDate: t.timestamp('expire_date').notNull(),
 });
