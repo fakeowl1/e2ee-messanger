@@ -10,12 +10,16 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     receivedMessages: r.many.message({
       from: r.users.id,
-      to: r.message.recieverId,
-      alias: 'sentMessage',
+      to: r.message.receiverId,
+      alias: 'receivedMessage',
     }),
     userKeys: r.many.userPublicKeys({
       from: r.users.id,
       to: r.userPublicKeys.userId,
+    }),
+    sessions: r.many.sessions({
+      from: r.users.id,
+      to: r.sessions.ownerUserId,
     }),
   },
 
@@ -26,9 +30,20 @@ export const relations = defineRelations(schema, (r) => ({
       alias: 'sentMessage',
     }),
     receiver: r.one.users({
-      from: r.message.recieverId,
+      from: r.message.receiverId,
       to: r.users.id,
-      alias: 'receivedMessages',
+      alias: 'receivedMessage',
+    }),
+    chat: r.one.chats({
+      from: r.message.chatId,
+      to: r.chats.id,
+    }),
+  },
+
+  chats: {
+    messages: r.many.message({
+      from: r.chats.id,
+      to: r.message.chatId,
     }),
   },
 
@@ -44,6 +59,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   sessions: {
+    owner: r.one.users({
+      from: r.sessions.ownerUserId,
+      to: r.users.id,
+    }),
     userKey: r.one.userPublicKeys({
       from: r.sessions.userKeyId,
       to: r.userPublicKeys.id,
