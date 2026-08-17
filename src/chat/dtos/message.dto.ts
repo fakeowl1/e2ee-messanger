@@ -5,6 +5,9 @@ export class CreateMessageDto {
   sessionID: number;
 
   @IsNotEmpty()
+  chatId: number;
+
+  @IsNotEmpty()
   receiverUserID: number;
 
   @IsNotEmpty()

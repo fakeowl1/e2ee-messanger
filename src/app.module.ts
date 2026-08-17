@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import type { StringValue } from 'ms';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import type { StringValue } from 'ms';
     AuthModule,
     UserModule,
     ChatModule,
+    SessionModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],

@@ -1,11 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { DRIZZLE } from 'src/database/database.constants';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { relations } from 'src/database/relations';
 import * as schema from 'src/database/schema';
-import { eq, gte, and } from 'drizzle-orm';
-import { CreateNewSessionDto } from './dto/session.dto';
-import { UserKeyService } from './user-key.service';
+import { eq, gte, and, sql } from 'drizzle-orm';
+import { CreateNewSessionDto } from '../session/dtos/session.dto';
 
 export type Session = typeof schema.sessions.$inferSelect;
 export type NewSession = typeof schema.sessions.$inferInsert;
@@ -14,7 +13,6 @@ export type NewSession = typeof schema.sessions.$inferInsert;
 export class SessionService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof relations>,
-    private readonly userKeyService: UserKeyService,
   ) {}
 
   async findById(id: number): Promise<Session | null> {
@@ -47,13 +45,35 @@ export class SessionService {
     const expireDate = new Date();
     expireDate.setMonth(expireDate.getMonth() + 1);
 
-    const sessionKey = await this.userKeyService.createUserPublicKey(
-      userId,
-      newSessionDto,
-    );
+    const userIdResult = await this.db
+      .select({
+        exists: sql<number>`1`,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+
+    const userIdValid = userIdResult.length > 0;
+
+    if (!userIdValid) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'User associated with userId is not exist',
+      });
+    }
+
+    const [userKey] = await this.db
+      .insert(schema.userPublicKeys)
+      .values({
+        userId: userId,
+        publicKey: newSessionDto.publicKey,
+      })
+      .returning();
 
     const sessionData: NewSession = {
-      userKeyId: sessionKey.id,
+      userKeyId: userKey.id,
+      ownerUserId: userId,
       expireDate: expireDate,
     };
 

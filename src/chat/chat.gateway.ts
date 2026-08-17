@@ -7,17 +7,14 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtPayload, WsAuthGuard } from 'src/auth/guards/websocket.guards';
-import { CreateNewSessionDto } from './dto/session.dto';
-import { SessionService } from './session.service';
-import { UserService } from 'src/user/user.service';
+import { CreateMessageDto } from './dtos/message.dto';
+import { MessageService } from './message.service';
 
 interface ClientData {
   user: JwtPayload;
-  userId: number;
 }
 
 @WebSocketGateway(3001, {
@@ -31,10 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(
-    public readonly sessionServ: SessionService,
-    public readonly userServ: UserService,
-  ) {}
+  constructor(public readonly messageServ: MessageService) {}
 
   handleConnection(client: Socket): void {
     this.server.emit('room', client.id + ' joined!');
@@ -44,20 +38,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('room', client.id + ' left!');
   }
 
-  @SubscribeMessage('newSession')
-  async getUserPublicKey(
+  @SubscribeMessage('sendMessage')
+  async newMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() newSession: CreateNewSessionDto,
+    @MessageBody() newMessageDto: CreateMessageDto,
   ) {
     const data = client.data as ClientData;
-    const user = await this.userServ.findByEmail(data.user.email);
 
-    if (!user) {
-      throw new WsException('User associated with token no longer exists.');
-    }
+    const message = await this.messageServ.create(data.user.sub, newMessageDto);
 
-    const session = await this.sessionServ.create(user.id, newSession);
-
-    return session;
+    return message;
   }
 }

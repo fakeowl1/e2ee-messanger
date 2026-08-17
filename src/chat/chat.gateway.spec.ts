@@ -1,84 +1,79 @@
-import { WsException } from '@nestjs/websockets';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Socket } from 'socket.io';
 import { ChatGateway } from './chat.gateway';
-import { SessionService } from './session.service';
-import { UserService } from 'src/user/user.service';
+import { MessageService } from './message.service';
+import { CreateMessageDto } from './dtos/message.dto';
+import { JwtService } from '@nestjs/jwt';
+
+type MockSocket = Partial<Socket> & {
+  data: {
+    user: {
+      sub: number;
+    };
+  };
+};
 
 describe('ChatGateway', () => {
   let gateway: ChatGateway;
-  let sessionCreateMock: jest.Mock;
-  let findByEmailMock: jest.Mock;
-  let emitMock: jest.Mock;
+  let messageServiceMock: { create: jest.Mock };
 
-  beforeEach(() => {
-    sessionCreateMock = jest.fn();
-    findByEmailMock = jest.fn();
-    emitMock = jest.fn();
+  beforeEach(async () => {
+    jest.clearAllMocks();
 
-    gateway = new ChatGateway(
-      {
-        create: sessionCreateMock,
-      } as unknown as SessionService,
-      {
-        findByEmail: findByEmailMock,
-      } as unknown as UserService,
-    );
+    messageServiceMock = {
+      create: jest.fn(),
+    };
 
-    gateway.server = {
-      emit: emitMock,
-    } as never;
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ChatGateway,
+        {
+          provide: MessageService,
+          useValue: messageServiceMock,
+        },
+        JwtService,
+      ],
+    }).compile();
+
+    gateway = module.get<ChatGateway>(ChatGateway);
   });
 
   it('should be defined', () => {
     expect(gateway).toBeDefined();
   });
 
-  it('should emit a room message on connection', () => {
-    gateway.handleConnection({ id: 'socket-1' } as never);
+  describe('newMessage', () => {
+    it('should create and return a new message for authorized socket', async () => {
+      const mockClient: MockSocket = {
+        data: {
+          user: {
+            sub: 42,
+          },
+        },
+      };
 
-    expect(emitMock).toHaveBeenCalledWith('room', 'socket-1 joined!');
-  });
+      const dto: CreateMessageDto = {
+        sessionID: 1,
+        chatId: 10,
+        receiverUserID: 7,
+        encryptedMessageText: 'Encrypted payload string',
+        timestamp: new Date(),
+      };
 
-  it('should emit a room message on disconnect', () => {
-    gateway.handleDisconnect({ id: 'socket-1' } as never);
+      const mockCreatedMessage = {
+        id: 101,
+        senderId: 42,
+        receiverId: 7,
+        encryptedMessage: 'Encrypted payload string',
+        timestamp: new Date(),
+      };
 
-    expect(emitMock).toHaveBeenCalledWith('room', 'socket-1 left!');
-  });
+      messageServiceMock.create.mockResolvedValue(mockCreatedMessage);
 
-  it('should create a session for the authenticated user', async () => {
-    const client = {
-      data: {
-        user: { email: 'alice@mail.com' },
-      },
-    } as never;
-    const session = { id: 10 };
-    const newSession = { publicKey: 'public-key' };
-    const user = { id: 7, email: 'alice@mail.com' };
+      const result = await gateway.newMessage(mockClient as Socket, dto);
 
-    findByEmailMock.mockResolvedValue(user);
-    sessionCreateMock.mockResolvedValue(session);
-
-    await expect(gateway.getUserPublicKey(client, newSession)).resolves.toBe(
-      session,
-    );
-
-    expect(findByEmailMock).toHaveBeenCalledWith('alice@mail.com');
-    expect(sessionCreateMock).toHaveBeenCalledWith(7, newSession);
-  });
-
-  it('should throw if the user no longer exists', async () => {
-    const client = {
-      data: {
-        user: { email: 'alice@mail.com' },
-      },
-    } as never;
-
-    findByEmailMock.mockResolvedValue(null);
-
-    await expect(
-      gateway.getUserPublicKey(client, { publicKey: 'public-key' }),
-    ).rejects.toBeInstanceOf(WsException);
-
-    expect(findByEmailMock).toHaveBeenCalledWith('alice@mail.com');
-    expect(sessionCreateMock).not.toHaveBeenCalled();
+      expect(messageServiceMock.create).toHaveBeenCalledWith(42, dto);
+      expect(result).toEqual(mockCreatedMessage);
+    });
   });
 });
