@@ -11,6 +11,5 @@ export type RequestWithLocalUser = Request & {
   user: {
     id: number;
     email: string;
-    userName: string;
   };
 };
