@@ -19,6 +19,7 @@ describe('MessageService', () => {
   let dbMock: MockDb;
 
   const mockCreateMessageDto: CreateMessageDto = {
+    sessionID: 1,
     receiverUserID: 2,
     chatId: 100,
     encryptedMessageText: 'encrypted_payload_string',
@@ -70,6 +71,7 @@ describe('MessageService', () => {
       dbMock.limit
         .mockResolvedValueOnce([{ exists: 1 }])
         .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([{ exists: 1 }])
         .mockResolvedValueOnce([{ exists: 1 }]);
 
       dbMock.insert.mockReturnValue(dbMock);
@@ -79,7 +81,7 @@ describe('MessageService', () => {
       const result = await service.create(1, mockCreateMessageDto);
 
       expect(result).toEqual(mockInsertedMessage);
-      expect(dbMock.select).toHaveBeenCalledTimes(3);
+      expect(dbMock.select).toHaveBeenCalledTimes(4);
       expect(dbMock.insert).toHaveBeenCalledTimes(1);
       expect(dbMock.values).toHaveBeenCalledWith({
         senderId: 1,
@@ -114,8 +116,8 @@ describe('MessageService', () => {
       dbMock.from.mockReturnValue(dbMock);
       dbMock.where.mockReturnValue(dbMock);
       dbMock.limit
-        .mockResolvedValueOnce([{ exists: 1 }]) // receiver exists
-        .mockResolvedValueOnce([]); // sender not found
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([]);
 
       await expect(service.create(1, mockCreateMessageDto)).rejects.toThrow(
         new BadRequestException({
@@ -130,14 +132,34 @@ describe('MessageService', () => {
       expect(dbMock.insert).not.toHaveBeenCalled();
     });
 
+    it("should throw BadRequestException if user don't own session", async () => {
+      dbMock.select.mockReturnValue(dbMock);
+      dbMock.from.mockReturnValue(dbMock);
+      dbMock.where.mockReturnValue(dbMock);
+      dbMock.limit
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([]);
+
+      await expect(service.create(1, mockCreateMessageDto)).rejects.toThrow(
+        new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: "User don't own session",
+          field: 'sessionId',
+        }),
+      );
+    });
+
     it('should throw BadRequestException if chat ID is invalid or does not exist', async () => {
       dbMock.select.mockReturnValue(dbMock);
       dbMock.from.mockReturnValue(dbMock);
       dbMock.where.mockReturnValue(dbMock);
       dbMock.limit
-        .mockResolvedValueOnce([{ exists: 1 }]) // receiver exists
-        .mockResolvedValueOnce([{ exists: 1 }]) // sender exists
-        .mockResolvedValueOnce([]); // chat not found
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([{ exists: 1 }])
+        .mockResolvedValueOnce([]);
 
       await expect(service.create(1, mockCreateMessageDto)).rejects.toThrow(
         new BadRequestException({
@@ -148,7 +170,7 @@ describe('MessageService', () => {
         }),
       );
 
-      expect(dbMock.select).toHaveBeenCalledTimes(3);
+      expect(dbMock.select).toHaveBeenCalledTimes(4);
       expect(dbMock.insert).not.toHaveBeenCalled();
     });
   });

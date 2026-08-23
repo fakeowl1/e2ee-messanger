@@ -55,6 +55,23 @@ export class MessageService {
       });
     }
 
+    const userSessionResult = await this.db
+      .select({ exists: sql<number>`1` })
+      .from(schema.sessions)
+      .where(eq(schema.sessions.ownerUserId, senderUserID))
+      .limit(1);
+
+    const isUserOwnsSession = userSessionResult.length > 0;
+
+    if (!isUserOwnsSession) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: "User don't own session",
+        field: 'sessionId',
+      });
+    }
+
     const chatId = newMessageDto.chatId;
     const chatIdResult = await this.db
       .select({
