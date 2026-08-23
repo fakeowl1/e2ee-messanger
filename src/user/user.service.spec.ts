@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
-import { UserRepository } from './user.repository';
+import { DRIZZLE } from 'src/database/database.constants';
 
 describe('UserService', () => {
   let service: UserService;
@@ -10,9 +10,9 @@ describe('UserService', () => {
       providers: [
         UserService,
         {
-          provide: UserRepository,
+          provide: DRIZZLE,
           useValue: {
-            findAll: jest.fn(),
+            select: jest.fn(),
           },
         },
       ],

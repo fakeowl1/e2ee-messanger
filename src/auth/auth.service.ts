@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { NewUser, User } from 'src/user/user.repository';
+import { JwtService } from '@nestjs/jwt';
+import { UserService, NewUser } from 'src/user/user.service';
 
 import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
 import { UserLoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register.dto';
 
@@ -13,7 +11,6 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async register({
@@ -38,10 +35,8 @@ export class AuthService {
 
     const payload = await this.userService.create(newUser);
 
-    const jwtOptions = this.configService.get<JwtSignOptions>('jwt');
-
     return {
-      access_token: this.jwtService.sign(payload, jwtOptions),
+      access_token: this.jwtService.sign(payload),
     };
   }
 
@@ -56,13 +51,11 @@ export class AuthService {
     return user;
   }
 
-  login(user: User): { access_token: string } {
+  login(user: { email: string; id: number }): { access_token: string } {
     const payload = { email: user.email, sub: user.id };
 
-    const jwtOptions = this.configService.get<JwtSignOptions>('jwt');
-
     return {
-      access_token: this.jwtService.sign(payload, jwtOptions),
+      access_token: this.jwtService.sign(payload),
     };
   }
 }
