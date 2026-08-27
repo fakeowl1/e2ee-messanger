@@ -12,7 +12,8 @@
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",
     "test:backend": "npm run test --workspace=backend",
-    "test:frontend": "npm run test --workspace=frontend"
+    "test:frontend": "npm run test --workspace=frontend",
+    "format": "prettier --write \"**/*.{ts,js,vue,json,md}\""
   },
   "workspaces": [
     "apps/*"
@@ -24,9 +25,11 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-vue": "^10.10.0",
     "globals": "^17.0.0",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vue-eslint-parser": "^10.4.1"
   }
 }
