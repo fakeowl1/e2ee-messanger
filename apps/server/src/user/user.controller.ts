@@ -1,14 +1,33 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
+import type { RequestWithJwtUser } from 'src/auth/auth.type';
+import { UserResponseDto } from './dto/user.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  async allUsers(): Promise<string> {
-    const users = await this.userService.findAll();
+  async currentUser(@Req() req: RequestWithJwtUser): Promise<UserResponseDto> {
+    const reqUser = req.user;
 
-    return JSON.stringify(users);
+    const user = await this.userService.findByEmail(reqUser.email);
+
+    if (!user) {
+      throw new NotFoundException('User account not found');
+    }
+
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 }
